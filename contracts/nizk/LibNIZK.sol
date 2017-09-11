@@ -1,8 +1,9 @@
 pragma solidity ^0.4.2;
 
-import "LibString.sol";
-import "LibInt.sol";
-import "LibNizkParam.sol";
+import "../utillib/LibString.sol";
+import "../utillib/LibInt.sol";
+import "./LibNizkParam.sol";
+
 library LibNIZK {
     using LibString for *;
     using LibInt for *;
