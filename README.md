@@ -11,7 +11,7 @@
 9. 提供实时的系统监控能力  
 10. 提供跨平台的用户私钥硬件管理方式  
 
-## Demo安装 ##
+## [Demo安装](https://github.com/Juzix/wiki/blob/master/BlockChain-Demo-Guide.md) ##
 1. 优先安装好矩阵元联盟链，可以通过云平台快速的构建，具体参考云平台使用介绍  
 2. 安装好智能合约编译发布环境truffle  
 3. 将上述智能合约代码在truffle的环境下编译部署到好矩阵元联盟链上  
