@@ -418,10 +418,10 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
         _json = _json.concat("{");
         if(msg.sender == owner){
             _json = _json.concat(string(circulationShares).toKeyValue("circulationShares"),",");
-            _json = _json.concat(uint(1).toKeyValue("isAdmin"),"}");
+            _json = _json.concat(uint(1).toKeyValue("isAdmin"));
         }else{
             _json = _json.concat(uint(0).toKeyValue("circulationShares"),",");
-            _json = _json.concat(uint(2).toKeyValue("isAdmin"),"}");
+            _json = _json.concat(uint(2).toKeyValue("isAdmin"));
         }
         _json = _json.concat("}");
     }
