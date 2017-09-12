@@ -25,7 +25,7 @@ library LibTokenPailler{
 		_json = _json.concat( uint(_self.toAddr).toAddrString().toKeyValue("toAddr"),",");
 		_json = _json.concat( uint(_self.tranferTime).toKeyValue("tranferTime"),",");
 		//_json = _json.concat( uint(_self.tranferType).toKeyValue("tranferType"),",");
-		_json = _json.concat( _self.amountIn.toKeyValue("amountIn"));
+		_json = _json.concat( _self.amountIn.toKeyValue("amountIn"),",");
 		_json = _json.concat( _self.amountOut.toKeyValue("amountOut"));
 		_json = _json.concat("}");
 	}
