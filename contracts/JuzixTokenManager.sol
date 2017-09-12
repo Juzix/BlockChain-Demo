@@ -25,7 +25,6 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
     string public nizkpp;
 
 	uint256 public constant INITIAL_SUPPLY = 10000;
-	string public circulationShares = "";  //流通股数
 
 	mapping(address => string) t_balances;
     address[] buyAddrs;         // 所有认购者地址
@@ -44,7 +43,8 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
         NO_ERROR,
         BAD_PARAMETER,
         NO_PERMISSION,
-        NIZK_ERROR
+        NIZK_ERROR,
+        NO_BALANCE
     }
 
 	function JuzixTokenManager() {
@@ -64,27 +64,43 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
         }
 
         for (uint i = 0; i < buyAddrs.length; ++i) {
-           if( tx.origin == buyAddrs[i] ) {
-                return;
-           }
+            if( tx.origin == buyAddrs[i] ) {
+                return true;
+            }
         }
-        circulationShares = _circulationShares;
+
         buyAddrs.push(tx.origin);
         t_balances[tx.origin] = _circulationShares;
+        log("set circulation shares success!", "JuzixTokenManager");
         errno= uint(ErrorCode.NO_ERROR);
-        Notify(errno, "set circulationShares success!");
+        Notify(errno, "set circulation shares success!");
         return true;
     }
+
 
     /// @dev 股权登记
     /// @param _param 零知识证明信息
     /// @param _to 股权登记地址
-    function buyFrom(string _param,address _to) public returns(uint) {
+    function buyFrom(string _param,address _to) public returns (uint) {
 
         //判断是否是管理员
         if(tx.origin != owner){
             log("msg.sender is not admin,no permission", "JuzixTokenManager");
             errno= uint(ErrorCode.NO_PERMISSION);
+            Notify(errno, "msg.sender is not admin,no permission..");
+            return errno;
+        }
+
+        if (tx.origin == _to){
+            log("tx.origin equals _to,could not transfer to oneself!", "JuzixTokenManager");
+            errno= uint(ErrorCode.NO_PERMISSION);
+            Notify(errno, "could not transfer to oneself!");
+            return errno;
+        }
+
+        if (bytes(t_balances[tx.origin]).length == 0) {
+            log("This account has no enough balance", "JuzixTokenManager");
+            errno= uint(ErrorCode.NO_BALANCE);
             Notify(errno, "msg.sender is not admin,no permission..");
             return errno;
         }
@@ -97,10 +113,11 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
         }
 
         param.nizkpp = nizkpp;
+        param.balapubcipher = t_balances[tx.origin];
 
         string memory t_result;
         if(bytes(t_balances[_to]).length == 0){
-            t_balances[_to] = param.cipher2;
+            t_balances[_to] = param.trabpubcipher;
             buyAddrs.push(_to);
             log("first time register stock....","JuzixTokenManager");
         } else {
@@ -108,6 +125,7 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
             log("register stock again....","JuzixTokenManager");
 
             param.cipher1 = t_balances[_to];
+            param.cipher2 = param.trabpubcipher;
 
             if(bytes(param.cipher1).length == 0){
                 log("nizk param ,param cipher1:",param.cipher1);
@@ -137,6 +155,10 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
             t_balances[_to] = t_result;
         }
 
+        //总数扣减
+        param.cipher1 = t_balances[owner];
+        param.cipher2 = param.traapubcipher;
+
         log("nizk param ,param cipher1:",param.cipher1);
         log("nizk param ,param cipher2:",param.cipher2);
         log("nizk param ,param pais:",param.pais);
@@ -145,10 +167,8 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
         log("nizk param ,param trabpubcipher:",param.trabpubcipher);
         log("nizk param ,param apukkey:",param.apukkey);
         log("nizk param ,param bpukkey:",param.bpukkey);
-        log("nizk param ,param nizkpp:",param.nizkpp);
+        // log("nizk param ,param nizkpp:",param.nizkpp);
 
-        //总数扣减
-        param.cipher1 = t_balances[owner];
         t_result = LibNIZK.nizk_apubciphersub(param);
         log("nizk result,sub t_result:",t_result);
         if(bytes(t_result).length != 0){
@@ -164,11 +184,12 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
         tranferType : 1,
         name : name,
         symbol : symbol,
-        amount : param.cipher2,
+        amountIn : param.trabpubcipher,
+        amountOut : param.traapubcipher,
         deleted : false
         });
         tokenRecords.push(tokenRecordTmp);
-        log("register stock success ,amount  is : " , param.cipher2);
+        log("register stock success");
         errno = uint(ErrorCode.NO_ERROR);
         Notify(errno, "register stock success..");
         return errno;
@@ -179,10 +200,23 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
     /// @param _to 接收者地址
     function transferPaillier(string _param,address _to) public returns (bool) {
 
-        uint prefix = 95270;
     	address _from = msg.sender;
     	log("exec transferPaillier,msg.sender ->",msg.sender);
     	log("exec transferPaillier,_to ->",_to);
+
+        if (bytes(t_balances[tx.origin]).length == 0) {
+            log("This account has no enough balance", "JuzixTokenManager");
+            errno= uint(ErrorCode.NO_BALANCE);
+            Notify(errno, "msg.sender is not admin,no permission..");
+            return false;
+        }
+
+        if (tx.origin == _to){
+            log("tx.origin equals _to,could not transfer to oneself!", "JuzixTokenManager");
+            errno= uint(ErrorCode.NO_PERMISSION);
+            Notify(errno, "could not transfer to oneself!");
+            return false;
+        }
 
         if (!param.jsonParse(_param)) {
             log("param json is invalid", "JuzixTokenManager");
@@ -192,6 +226,7 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
         }
 
         param.nizkpp = nizkpp;
+        param.balapubcipher = t_balances[tx.origin];
 
         // 接收金额
         string memory t_result;
@@ -205,22 +240,32 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
             }
             if(flag){
                 buyAddrs.push(_to);
-                t_balances[_to] = param.cipher2;
+                t_balances[_to] = param.trabpubcipher;
             }
             log("this user has not record of registered stock!","JuzixTokenManager");
 
     	}else{
 
             param.cipher1 = t_balances[_to];
+            param.cipher2 = param.trabpubcipher;
 
+            if(bytes(param.cipher1).length == 0){
                 log("nizk param ,param cipher1:",param.cipher1);
+            } if(bytes(param.cipher2).length == 0){
                  log("nizk param ,param cipher2:",param.cipher2);
+            } if(bytes(param.pais).length == 0){
                 log("nizk param ,param pais:",param.pais);
+            } if(bytes(param.traapubcipher).length == 0){
                 log("nizk param ,param traapubcipher:",param.traapubcipher);
+            } if(bytes(param.trabpubcipher).length == 0){
                 log("nizk param ,param trabpubcipher:",param.trabpubcipher);
+            } if(bytes(param.apukkey).length == 0){
                 log("nizk param ,param apukkey:",param.apukkey);
+            } if(bytes(param.bpukkey).length == 0){
                 log("nizk param ,param bpukkey:",param.bpukkey);
+            }if(bytes(param.nizkpp).length == 0){
                 log("nizk param ,param nizkpp:",param.nizkpp);
+            }
 
             t_result = LibNIZK.nizk_apubcipheradd(param);
             log("nizk result,t_result:",t_result);
@@ -232,9 +277,21 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
                 throw;
             }
     	}
-        
+
         // 扣减
         param.cipher1 = t_balances[tx.origin];
+        param.cipher2 = param.traapubcipher;
+
+        log("nizk param ,param cipher1:",param.cipher1);
+        log("nizk param ,param cipher2:",param.cipher2);
+        log("nizk param ,param pais:",param.pais);
+        log("nizk param ,param balapubcipher:",param.balapubcipher);
+        log("nizk param ,param traapubcipher:",param.traapubcipher);
+        log("nizk param ,param trabpubcipher:",param.trabpubcipher);
+        log("nizk param ,param apukkey:",param.apukkey);
+        log("nizk param ,param bpukkey:",param.bpukkey);
+        //log("nizk param ,param nizkpp:",param.nizkpp);
+
     	t_result = LibNIZK.nizk_apubciphersub(param);
         log("nizk result,t_result:",t_result);
         if(bytes(t_result).length != 0){
@@ -251,7 +308,8 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
 	    	toAddr : _to,
 	    	tranferTime : now * 1000,
 	    	tranferType : 1,
-	    	amount : param.cipher2,
+            amountIn : param.trabpubcipher,
+            amountOut : param.traapubcipher,
             deleted : false
 	    }); 
 	    tokenPaillers.push(tokenPaillerTmp);
@@ -460,6 +518,18 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
     /// @dev 获取零知识证明结构
     function getNizkStruct() constant public returns (string _ret){
         return nizkpp;
+    }
+
+    /// 初始化数据
+    function init() public {
+        // delete t_balances;
+        delete buyAddrs;  
+        if(buyAddrs.length != 0)  {
+            log("init fail");
+            return;
+        }
+        log("init success");
+        return;
     }
 
 }

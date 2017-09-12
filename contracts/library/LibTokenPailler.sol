@@ -13,8 +13,9 @@ library LibTokenPailler{
 		address 				fromAddr;
 		address 				toAddr;
 		uint 					tranferTime;
-		uint 					tranferType; 		// 1 transfer 2 other
-		string 					amount;			
+		uint 					tranferType; 		// 1 转入, 2 转出
+	    string 					amountIn;			// 转入代币数量
+	    string 					amountOut;			// 转出代币数量
 		bool 					deleted;
 	}
 
@@ -24,7 +25,8 @@ library LibTokenPailler{
 		_json = _json.concat( uint(_self.toAddr).toAddrString().toKeyValue("toAddr"),",");
 		_json = _json.concat( uint(_self.tranferTime).toKeyValue("tranferTime"),",");
 		//_json = _json.concat( uint(_self.tranferType).toKeyValue("tranferType"),",");
-		_json = _json.concat( _self.amount.toKeyValue("amount"));
+		_json = _json.concat( _self.amountIn.toKeyValue("amountIn"));
+		_json = _json.concat( _self.amountOut.toKeyValue("amountOut"));
 		_json = _json.concat("}");
 	}
 
@@ -32,7 +34,8 @@ library LibTokenPailler{
 		_self.fromAddr = 0;
 		_self.toAddr = 0;
 		_self.tranferType = 1;
-		_self.amount = "";
+		_self.amountIn = "";
+		_self.amountOut = "";
 		_self.tranferTime = 0;
 		_self.deleted = false;
 	}

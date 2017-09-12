@@ -53,10 +53,10 @@ contract TokenModuleManager is BaseModule {
         _json = _json.concat("\"moduleDescription\":\"", moduleName.concat(moduleVersion, "-Token代币模块"), "\"");
         _json = _json.concat("}");
         
-        uint ret = addModule(_json);
-
+        uint ret = addModule(_json); 
+        sysModuleId = ret.recoveryToString();
         log("construct sysModuleId:",sysModuleId);
-        log("construct ret :" ,ret);
+       
     }
 
 }
