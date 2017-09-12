@@ -60,6 +60,12 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
             log("msg sender is not owner,no permission");
             return;
         }
+
+        for (uint i = 0; i < buyAddrs.length; ++i) {
+           if( tx.origin == buyAddrs[i] ) {
+                return;
+           }
+        }
         circulationShares = _circulationShares;
         buyAddrs.push(tx.origin);
         t_balances[tx.origin] = _circulationShares;
@@ -125,6 +131,16 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
             }
             t_balances[_to] = t_result;
         }
+
+        log("nizk param ,param cipher1:",param.cipher1);
+        log("nizk param ,param cipher2:",param.cipher2);
+        log("nizk param ,param pais:",param.pais);
+        log("nizk param ,param balapubcipher:",param.balapubcipher);
+        log("nizk param ,param traapubcipher:",param.traapubcipher);
+        log("nizk param ,param trabpubcipher:",param.trabpubcipher);
+        log("nizk param ,param apukkey:",param.apukkey);
+        log("nizk param ,param bpukkey:",param.bpukkey);
+        log("nizk param ,param nizkpp:",param.nizkpp);
 
         //总数扣减
         param.cipher1 = t_balances[owner];
@@ -192,23 +208,14 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
 
             param.cipher1 = t_balances[_to];
 
-            if(bytes(param.cipher1).length == 0){
                 log("nizk param ,param cipher1:",param.cipher1);
-            } if(bytes(param.cipher2).length == 0){
                  log("nizk param ,param cipher2:",param.cipher2);
-            } if(bytes(param.pais).length == 0){
                 log("nizk param ,param pais:",param.pais);
-            } if(bytes(param.traapubcipher).length == 0){
                 log("nizk param ,param traapubcipher:",param.traapubcipher);
-            } if(bytes(param.trabpubcipher).length == 0){
                 log("nizk param ,param trabpubcipher:",param.trabpubcipher);
-            } if(bytes(param.apukkey).length == 0){
                 log("nizk param ,param apukkey:",param.apukkey);
-            } if(bytes(param.bpukkey).length == 0){
                 log("nizk param ,param bpukkey:",param.bpukkey);
-            }if(bytes(param.nizkpp).length == 0){
                 log("nizk param ,param nizkpp:",param.nizkpp);
-            }
 
             t_result = LibNIZK.nizk_apubcipheradd(param);
             log("nizk result,t_result:",t_result);
@@ -254,7 +261,10 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
     /// @param _owner 待查询账户地址
     /// @return _balance 当前账户的余额（加密数据）
     function balanceOfPaillier(address _owner) constant returns (string _balance) {
-       	return t_balances[_owner];
+        _balance = _balance.concat("{");
+        _balance = _balance.concat( t_balances[_owner].toKeyValue("balance"));
+        _balance = _balance.concat("}");
+       	return _balance;
     }
 
     /// @dev 返回发行总量
@@ -417,7 +427,7 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
     function isAdmin() constant public returns(string _json){
         _json = _json.concat("{");
         if(msg.sender == owner){
-            _json = _json.concat(string(circulationShares).toKeyValue("circulationShares"),",");
+            _json = _json.concat(t_balances[msg.sender].toKeyValue("circulationShares"),",");
             _json = _json.concat(uint(1).toKeyValue("isAdmin"));
         }else{
             _json = _json.concat(uint(0).toKeyValue("circulationShares"),",");
