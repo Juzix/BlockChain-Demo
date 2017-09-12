@@ -55,14 +55,19 @@ contract JuzixTokenManager is OwnerNamed, StandardToken, IJuzixTokenManager {
 
     /// @dev 设置流通股数
     /// @param _circulationShares 流通股数（密文）
-    function setCirculationShares(string _circulationShares){
+    function setCirculationShares(string _circulationShares) returns (bool){
         if(tx.origin != owner){
             log("msg sender is not owner,no permission");
-            return;
+            errno= uint(ErrorCode.NO_PERMISSION);
+            Notify(errno, "msg.sender is not owner,no permission..");
+            return false;
         }
         circulationShares = _circulationShares;
         buyAddrs.push(tx.origin);
         t_balances[tx.origin] = _circulationShares;
+        errno= uint(ErrorCode.NO_ERROR);
+        Notify(errno, "set circulationShares success!");
+        return true;
     }
 
     /// @dev 股权登记

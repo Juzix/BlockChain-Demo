@@ -32,6 +32,6 @@ contract IJuzixTokenManager {
     function isAdmin() constant public returns(string _json);
 
     /// @dev 设置流通股数
-    function setCirculationShares(string _circulationShares);
+    function setCirculationShares(string _circulationShares) returns(bool);
 
 }
