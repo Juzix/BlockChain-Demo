@@ -36,9 +36,9 @@ contract TokenModuleManager is BaseModule {
         reversion = 0;
         register("TokenModuleManager","0.0.1.0");
 
-        moduleName = "TokenModuleManager";      //设置模块名称【根据实际修改】
-        moduleVersion = "0.0.1.0";              //设置模块版本号
-        sysModuleId = "tokenModuleId001";       //显示指定模块ID
+        moduleName = "TokenModuleManager";        //设置模块名称【根据实际修改】
+        moduleVersion = "0.0.1.0";                //设置模块版本号
+        sysModuleId = "TokenModuleManager_0.0.1.0";         //显示指定模块ID
         moduleText = "股权交易";                  //显示模块名称
 
         string memory _json = "{";
