@@ -38,8 +38,7 @@ contract TokenModuleManager is BaseModule {
 
         moduleName = "TokenModuleManager";                    //设置模块名称【根据实际修改】
         moduleVersion = "0.0.1.0";                            //设置模块版本号
-        sysModuleId = sysModuleId.concat(moduleName,"_");
-        sysModuleId = sysModuleId.concat(moduleVersion);      //显示指定模块(TokenModuleManager_0.0.1.0)
+        sysModuleId = sysModuleId.concat("_",moduleName);      //显示指定模块(TokenModuleManager_0.0.1.0)
         moduleText = "股权交易";                              //显示模块名称
 
         string memory _json = "{";
